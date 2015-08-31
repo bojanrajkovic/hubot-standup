@@ -12,6 +12,7 @@
 # Author:
 #   @miyagawa
 
+countdown = require('countdown')
 module.exports = (robot) ->
   robot.respond /(?:cancel|stop) standup *$/i, (msg) ->
     delete robot.brain.data.standup?[msg.message.user.room]
@@ -101,7 +102,7 @@ shuffleArrayClone = (array) ->
 nextPerson = (robot, room, msg) ->
   standup = robot.brain.data.standup[room]
   if standup.remaining.length == 0
-    howlong = calcMinutes(new Date().getTime() - standup.start)
+    howlong = countdown(standup.start, Date.now()).toString()
     msg.send "All done! Standup was #{howlong}."
     robot.brain.emit 'standupLog', standup.group, room, msg, standup.log
     delete robot.brain.data.standup[room]

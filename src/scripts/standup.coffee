@@ -38,7 +38,7 @@ module.exports = (robot) ->
         remaining: shuffleArrayClone(attendees)
         log: [],
       }
-      who = attendees.map((user) -> user.name).join(', ')
+      who = attendees.map((user) -> addressUser(user, robot.adapter)).join(', ')
       msg.send "Ok, let's start the standup: #{who}"
       nextPerson robot, room, msg
     else

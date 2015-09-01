@@ -91,6 +91,9 @@ module.exports = (robot) ->
   robot.catchAll (msg) ->
     unless robot.brain.data.standup?[msg.message.user.room]
       return
+    # Don't record someone speaking out of turn. :-)
+    if robot.brain.data.standup[msg.message.user.room].current.id isnt msg.message.user.id
+      return
     robot.brain.data.standup[msg.message.user.room].log.push { message: msg.message, time: new Date().getTime() }
 
 shuffleArrayClone = (array) ->

@@ -95,6 +95,29 @@ module.exports = (robot) ->
              skip <who> - skip someone when they're not available
              """
 
+  robot.respond /email me standup logs for ((?:(?:(?:(?:(?:[13579][26]|[2468][048])00)|(?:[0-9]{2}(?:(?:[13579][26])|(?:[2468][048]|0[48]))))(\/|-)(?:(?:(?:09|04|06|11)(\/|-)(?:0[1-9]|1[0-9]|2[0-9]|30))|(?:(?:01|03|05|07|08|10|12)-(?:0[1-9]|1[0-9]|2[0-9]|3[01]))|(?:02-(?:0[1-9]|1[0-9]|2[0-9]))))|(?:[0-9]{4}(\/|-)(?:(?:(?:09|04|06|11)(\/|-)(?:0[1-9]|1[0-9]|2[0-9]|30))|(?:(?:01|03|05|07|08|10|12)-(?:0[1-9]|1[0-9]|2[0-9]|3[01]))|(?:02-(?:[01][0-9]|2[0-8]))))))/i, (msg) ->
+    room = msg.message.user.room
+    date = msg.match[1].trim()
+
+    console.log "Asked to send logs for #{room} on #{date} to #{msg.message.user.email_address}"
+    realDate = date.replace("/", "-")
+
+    db.standups.findOne { _id: "#{room}-#{realDate}" }, (err, doc) ->
+      if err
+        msg.send "#{addressUser(msg.message.user, robot.adapter)}: An error occurred looking up logs: #{err}"
+        return
+      if !doc?
+        msg.send "#{addressUser(msg.message.user, robot.adapter)}: Couldn't find document matching logs for #{room} on #{realDate}."
+        return
+
+      pmClient.sendEmailWithTemplate
+        "From": process.env.MAILER_FROM,
+        "To": msg.message.user.email_address,
+        "TemplateId": process.env.POSTMARK_TEMPLATE_ID,
+        "TemplateModel": doc,
+
+      msg.send "#{addressUser(msg.message.user, robot.adapter)}: Logs sent!"
+
   robot.catchAll (msg) ->
     unless robot.brain.data.standup?[msg.message.user.room]
       return

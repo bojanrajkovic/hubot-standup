@@ -13,6 +13,7 @@
 #   @miyagawa
 
 countdown = require "countdown"
+moment = require "moment"
 mongojs = require "mongojs"
 util = require "util"
 
@@ -48,7 +49,7 @@ module.exports = (robot) ->
       }
       who = attendees.map((user) -> addressUser(user, robot.adapter)).join(', ')
       msg.send "Ok, let's start the standup: #{who}"
-      nextPerson robot, room, msg
+      nextPerson robot, db, room, msg
     else
       msg.send "Oops, can't find anyone with 'a #{group} member' role!"
 
@@ -58,7 +59,7 @@ module.exports = (robot) ->
     if robot.brain.data.standup[msg.message.user.room].current.id isnt msg.message.user.id
       msg.reply "but it's not your turn! Use skip [someone] or next [someone] instead."
     else
-      nextPerson robot, msg.message.user.room, msg
+      nextPerson robot, db, msg.message.user.room, msg
 
   robot.respond /(skip|next) (.*?) *$/i, (msg) ->
     unless robot.brain.data.standup?[msg.message.user.room]
@@ -72,13 +73,13 @@ module.exports = (robot) ->
       if is_skip
         standup.remaining = (user for user in standup.remaining when user.name != skip.name)
         if standup.current.id is skip.id
-          nextPerson robot, msg.message.user.room, msg
+          nextPerson robot, db, msg.message.user.room, msg
         else
           msg.send "Ok, I will skip #{skip.name}"
       else
         if standup.current.id is skip.id
           standup.remaining.push skip
-          nextPerson robot, msg.message.user.room, msg
+          nextPerson robot, db, msg.message.user.room, msg
         else
           msg.send "But it is not #{skip.name}'s turn!"
     else if users.length > 1
@@ -110,12 +111,25 @@ shuffleArrayClone = (array) ->
     cloned.push i
   cloned
 
-nextPerson = (robot, room, msg) ->
+nextPerson = (robot, db, room, msg) ->
   standup = robot.brain.data.standup[room]
   if standup.remaining.length == 0
     howlong = countdown(standup.start, Date.now()).toString()
     msg.send "All done! Standup was #{howlong}."
-    robot.brain.emit 'standupLog', standup.group, room, msg, standup.log
+
+    dbStandup = {
+      _id: "#{room}-#{moment(standup.start).format("YYYY-MM-DD")}",
+      end: Date.now(),
+      start: standup.start,
+      log: standup.log,
+      attendees: standup.attendees,
+      group: standup.group,
+    }
+    db.standups.insert dbStandup, (err, res) ->
+      if err
+        msg.send "An error occurred while saving the standup logs, check the error log"
+        console.log err
+    
     delete robot.brain.data.standup[room]
   else
     standup.current = standup.remaining.shift()
@@ -128,11 +142,3 @@ addressUser = (user, adapter) ->
     when "SlackBot" then "<@#{user.id}>"
     else "#{user.name}:"
 
-calcMinutes = (milliseconds) ->
-  seconds = Math.floor(milliseconds / 1000)
-  if seconds > 60
-    minutes = Math.floor(seconds / 60)
-    seconds = seconds % 60
-    "#{minutes} minutes and #{seconds} seconds"
-  else
-    "#{seconds} seconds"

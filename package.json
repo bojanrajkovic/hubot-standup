@@ -13,7 +13,10 @@
   },
   "main": "index.coffee",
   "dependencies": {
-    "coffee-script": "> 1.1.3"
+    "coffee-script": "> 1.1.3",
+    "countdown": "^2.6.0",
+    "mongodb": "^2.0.42",
+    "mongojs": "^1.3.0"
   },
   "devDependencies": {},
   "optionalDependencies": {}

@@ -45,7 +45,6 @@ module.exports = (robot) ->
         start: new Date().getTime(),
         attendees: attendees,
         remaining: shuffleArrayClone(attendees)
-        log: [],
       }
       who = attendees.map((user) -> addressUser(user, robot.adapter)).join(', ')
       msg.send "Ok, let's start the standup: #{who}"
@@ -119,16 +118,21 @@ nextPerson = (robot, db, room, msg) ->
     howlong = countdown(standup.start, Date.now()).toString()
     msg.send "All done! Standup was #{howlong}."
 
+    dbLog = [];
+    for user, logs of standup.log
+      dbLog.push({ user: user, logs: logs })
+
     dbStandup = {
       _id: "#{room}-#{moment(standup.start).format("YYYY-MM-DD")}",
       end: Date.now(),
       start: standup.start,
       duration: howlong,
       date: moment(standup.start).format("LL")
-      log: standup.log,
+      log: dbLog,
       attendees: standup.attendees,
       group: standup.group.toTitleCase(),
     }
+
     db.standups.insert dbStandup, (err, res) ->
       if err
         msg.send "An error occurred while saving the standup logs, check the error log"

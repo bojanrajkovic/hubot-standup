@@ -11,11 +11,11 @@
 #
 # Author:
 #   @miyagawa
+#   @bojanrajkovic
 
 countdown = require "countdown"
 moment = require "moment"
 mongojs = require "mongojs"
-util = require "util"
 postmark = require "postmark"
 
 mongo_uri = process.env.MONGOLAB_URI

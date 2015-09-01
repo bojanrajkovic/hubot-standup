@@ -1,4 +1,4 @@
- how logs are # Description:
+# Description:
 #   Agile standup bot ala tender
 #
 # Commands:
@@ -16,12 +16,15 @@ countdown = require "countdown"
 moment = require "moment"
 mongojs = require "mongojs"
 util = require "util"
+postmark = require "postmark"
+
+mongo_uri = process.env.MONGOLAB_URI
+mongo_collections = ["standups"]
+db = mongojs(mongo_uri, mongo_collections)
+
+pmClient = new postmark.Client(process.env.POSTMARK_API_KEY);
 
 module.exports = (robot) ->
-  mongo_uri = process.env.MONGOLAB_URI
-  mongo_collections = ["standups"]
-  db = mongojs(mongo_uri, mongo_collections)
-
   robot.respond /(?:cancel|stop) standup *$/i, (msg) ->
     delete robot.brain.data.standup?[msg.message.user.room]
     msg.send "Standup cancelled"

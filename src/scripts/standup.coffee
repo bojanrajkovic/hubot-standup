@@ -110,7 +110,7 @@ module.exports = (robot) ->
         msg.send "#{addressUser(msg.message.user, robot.adapter)}: An error occurred looking up logs: #{err}"
         return
       if !doc?
-        msg.send "#{addressUser(msg.message.user, robot.adapter)}: Couldn't find document matching logs for #{room} on #{realDate}."
+        msg.send "#{addressUser(msg.message.user, robot.adapter)}: Couldn't find document matching logs for ##{room} on #{realDate}."
         return
 
       pmClient.sendEmailWithTemplate

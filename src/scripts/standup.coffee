@@ -53,7 +53,7 @@ module.exports = (robot) ->
       msg.send "OK, let's start the standup: #{who}"
       nextPerson robot, db, room, msg
     else
-      msg.send "#{addressUser(msg.message.user, robot.adapter}: Can't find any #{group} members!"
+      msg.send "#{addressUser(msg.message.user, robot.adapter)}: Can't find any #{group} members!"
 
   robot.hear /(?:that\'s it|next(?: person)?|done|pass) *$/i, (msg) ->
     unless robot.brain.data.standup?[msg.message.user.room]

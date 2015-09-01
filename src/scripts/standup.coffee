@@ -27,13 +27,13 @@ pmClient = new postmark.Client(process.env.POSTMARK_API_KEY);
 module.exports = (robot) ->
   robot.respond /(?:cancel|stop) standup *$/i, (msg) ->
     delete robot.brain.data.standup?[msg.message.user.room]
-    msg.send "Standup cancelled"
+    msg.send "#{addressUser(msg.message.user, robot.adapter)}: Standup cancelled!"
 
   robot.respond /standup for (.*?) *$/i, (msg) ->
     room  = msg.message.user.room
     group = msg.match[1].trim()
     if robot.brain.data.standup?[room]
-      msg.send "The standup for #{robot.brain.data.standup[room].group} is in progress! Cancel it first with 'cancel standup'"
+      msg.send "#{addressUser(msg.message.user, robot.adapter)}: The standup for #{robot.brain.data.standup[room].group} is in progress! Cancel it first with 'cancel standup'"
       return
 
     attendees = []
@@ -50,16 +50,16 @@ module.exports = (robot) ->
         remaining: shuffleArrayClone(attendees)
       }
       who = attendees.map((user) -> addressUser(user, robot.adapter)).join(', ')
-      msg.send "Ok, let's start the standup: #{who}"
+      msg.send "OK, let's start the standup: #{who}"
       nextPerson robot, db, room, msg
     else
-      msg.send "Oops, can't find anyone with 'a #{group} member' role!"
+      msg.send "#{addressUser(msg.message.user, robot.adapter}: Can't find any #{group} members!"
 
   robot.hear /(?:that\'s it|next(?: person)?|done|pass) *$/i, (msg) ->
     unless robot.brain.data.standup?[msg.message.user.room]
       return
     if robot.brain.data.standup[msg.message.user.room].current.id isnt msg.message.user.id
-      msg.reply "but it's not your turn! Use skip [someone] or next [someone] instead."
+      msg.send "#{addressUser(msg.message.user, robot.adapter)}: It's not your turn! Tell me to skip [someone] or next [someone] instead."
     else
       nextPerson robot, db, msg.message.user.room, msg
 
@@ -77,17 +77,17 @@ module.exports = (robot) ->
         if standup.current.id is skip.id
           nextPerson robot, db, msg.message.user.room, msg
         else
-          msg.send "Ok, I will skip #{skip.name}"
+          msg.send "#{addressUser(msg.message.user, robot.adapter)}: OK, I'll skip #{skip.name}."
       else
         if standup.current.id is skip.id
           standup.remaining.push skip
           nextPerson robot, db, msg.message.user.room, msg
         else
-          msg.send "But it is not #{skip.name}'s turn!"
+          msg.send "#{addressUser(msg.message.user, robot.adapter)}: It's not #{skip.name}'s turn!"
     else if users.length > 1
-      msg.send "Be more specific, I know #{users.length} people named like that: #{(user.name for user in users).join(", ")}"
+      msg.send "#{addressUser(msg.message.user, robot.adapter)}: Be more specific, I know #{users.length} people named like that: #{(user.name for user in users).join(", ")}"
     else
-      msg.send "#{msg.match[2]}? Never heard of 'em"
+      msg.send "#{addressUser(msg.message.user, robot.adapter)}: #{msg.match[2]}? Never heard of 'em"
 
   robot.respond /standup\?? *$/i, (msg) ->
     msg.send """
@@ -167,7 +167,7 @@ nextPerson = (robot, db, room, msg) ->
     delete robot.brain.data.standup[room]
   else
     standup.current = standup.remaining.shift()
-    msg.send "#{addressUser(standup.current, robot.adapter)} your turn. Tell us what you did yesterday, what you're working on today, and any issues you've run into/are blocked on."
+    msg.send "#{addressUser(standup.current, robot.adapter)}, it's your turn. Tell us what you did yesterday, what you're working on today, and any issues you've run into/are blocked on."
 
 addressUser = (user, adapter) ->
   className = adapter.__proto__.constructor.name

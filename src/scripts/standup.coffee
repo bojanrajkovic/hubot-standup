@@ -93,6 +93,7 @@ module.exports = (robot) ->
       return
     # Don't record someone speaking out of turn. :-)
     if robot.brain.data.standup[msg.message.user.room].current.id isnt msg.message.user.id
+      console.log "Ignoring #{msg.message.user.name} speaking out of turn during standup in #{msg.message.user.room}."
       return
     robot.brain.data.standup[msg.message.user.room].log.push { message: msg.message, time: new Date().getTime() }
 

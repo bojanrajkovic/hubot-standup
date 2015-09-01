@@ -1,4 +1,4 @@
-# Description:
+ how logs are # Description:
 #   Agile standup bot ala tender
 #
 # Commands:
@@ -103,7 +103,9 @@ module.exports = (robot) ->
     if robot.brain.data.standup[msg.message.user.room].current.id isnt msg.message.user.id
       console.log "Ignoring #{msg.message.user.name} speaking out of turn during standup in #{msg.message.user.room}."
       return
-    robot.brain.data.standup[msg.message.user.room].log.push { message: msg.message, time: new Date().getTime() }
+    robot.brain.data.standup[msg.message.user.room].log or= {}
+    robot.brain.data.standup[msg.message.user.room].log[msg.message.user.name] or= []
+    robot.brain.data.standup[msg.message.user.room].log[msg.message.user.name].push { message: msg.message.text, time: Date.now() }
 
 shuffleArrayClone = (array) ->
   cloned = []
@@ -121,9 +123,11 @@ nextPerson = (robot, db, room, msg) ->
       _id: "#{room}-#{moment(standup.start).format("YYYY-MM-DD")}",
       end: Date.now(),
       start: standup.start,
+      duration: howlong,
+      date: moment(standup.start).format("LL")
       log: standup.log,
       attendees: standup.attendees,
-      group: standup.group,
+      group: standup.group.toTitleCase(),
     }
     db.standups.insert dbStandup, (err, res) ->
       if err
@@ -142,3 +146,56 @@ addressUser = (user, adapter) ->
     when "SlackBot" then "<@#{user.id}>"
     else "#{user.name}:"
 
+# Thanks, Stack Overflow
+String::toTitleCase = ->
+  i = undefined
+  j = undefined
+  str = undefined
+  lowers = undefined
+  uppers = undefined
+  str = @replace(/([^\W_]+[^\s-]*) */g, (txt) ->
+    txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+  )
+  # Certain minor words should be left lowercase unless 
+  # they are the first or last words in the string
+  lowers = [
+    'A'
+    'An'
+    'The'
+    'And'
+    'But'
+    'Or'
+    'For'
+    'Nor'
+    'As'
+    'At'
+    'By'
+    'For'
+    'From'
+    'In'
+    'Into'
+    'Near'
+    'Of'
+    'On'
+    'Onto'
+    'To'
+    'With'
+  ]
+  i = 0
+  j = lowers.length
+  while i < j
+    str = str.replace(new RegExp('\\s' + lowers[i] + '\\s', 'g'), (txt) ->
+      txt.toLowerCase()
+    )
+    i++
+  # Certain words such as initialisms or acronyms should be left uppercase
+  uppers = [
+    'Id'
+    'Tv'
+  ]
+  i = 0
+  j = uppers.length
+  while i < j
+    str = str.replace(new RegExp('\\b' + uppers[i] + '\\b', 'g'), uppers[i].toUpperCase())
+    i++
+  str

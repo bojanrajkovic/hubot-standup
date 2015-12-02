@@ -20,7 +20,7 @@ postmark = require "postmark"
 
 mongo_uri = process.env.MONGOLAB_URI
 mongo_collections = ["standups"]
-db = mongojs(mongo_uri, mongo_collections)
+db = mongojs(mongo_uri, mongo_collections, {authMechanism: 'ScramSHA1'})
 
 pmClient = new postmark.Client(process.env.POSTMARK_API_KEY);
 

@@ -17,6 +17,7 @@ countdown = require "countdown"
 moment = require "moment"
 mongojs = require "mongojs"
 postmark = require "postmark"
+shuffle = (require "knuth-shuffle").knuthShuffle
 
 mongo_uri = process.env.MONGOLAB_URI
 mongo_collections = ["standups"]
@@ -133,10 +134,8 @@ module.exports = (robot) ->
     robot.brain.data.standup[msg.message.user.room].log[msg.message.user.name].push { message: msg.message.text, time: Date.now() }
 
 shuffleArrayClone = (array) ->
-  cloned = []
-  for i in (array.sort -> 0.5 - Math.random())
-    cloned.push i
-  cloned
+  cloned = array.slice(0)
+  shuffle(cloned)
 
 nextPerson = (robot, db, room, msg) ->
   standup = robot.brain.data.standup[room]
@@ -163,7 +162,7 @@ nextPerson = (robot, db, room, msg) ->
       if err
         msg.send "An error occurred while saving the standup logs, check the error log"
         console.log err
-    
+
     delete robot.brain.data.standup[room]
   else
     standup.current = standup.remaining.shift()
@@ -186,7 +185,7 @@ String::toTitleCase = ->
   str = @replace(/([^\W_]+[^\s-]*) */g, (txt) ->
     txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
   )
-  # Certain minor words should be left lowercase unless 
+  # Certain minor words should be left lowercase unless
   # they are the first or last words in the string
   lowers = [
     'A'

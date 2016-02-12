@@ -134,8 +134,9 @@ module.exports = (robot) ->
     robot.brain.data.standup[msg.message.user.room].log[msg.message.user.name].push { message: msg.message.text, time: Date.now() }
 
 shuffleArrayClone = (array) ->
+  shuffle(array)
   cloned = array.slice(0)
-  shuffle(cloned)
+  cloned
 
 nextPerson = (robot, db, room, msg) ->
   standup = robot.brain.data.standup[room]

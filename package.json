@@ -15,7 +15,9 @@
   "dependencies": {
     "countdown": "^2.6.0",
     "knuth-shuffle": "^1.0.8",
-    "moment": "^2.22.2"
+    "moment": "^2.22.2",
+    "sqlite": "^3.0.0",
+    "to-title-case": "^1.0.0"
   },
   "devDependencies": {},
   "optionalDependencies": {}

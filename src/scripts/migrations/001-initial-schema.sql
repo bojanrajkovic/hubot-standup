@@ -1,0 +1,17 @@
+-- Up
+
+CREATE TABLE Standup (id INTEGER PRIMARY KEY, name TEXT, start INTEGER, end INTEGER, team TEXT);
+CREATE TABLE Attendee (id INTEGER PRIMARY KEY, standupId INTEGER, userId TEXT, name TEXT,
+    CONSTRAINT Attendee_FK_StandupId FOREIGN KEY (standupId)
+        REFERENCES Standup (id) ON UPDATE CASCADE ON DELETE CASCADE);
+CREATE TABLE LogEntry (id INTEGER PRIMARY KEY, standupId INTEGER, attendeeId INTEGER, time INTEGER, message TEXT,
+    CONSTRAINT LogEntry_FK_AttendeeId FOREIGN KEY (attendeeId)
+        REFERENCES Attendee (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT LogEntry_FK_StandupId FOREIGN KEY (standupId)
+        REFERENCES Standup (id) ON UPDATE CASCADE ON DELETE CASCADE);
+
+-- Down
+
+DROP TABLE LogEntry;
+DROP TABLE Attendee;
+DROP TABLE Standup;
